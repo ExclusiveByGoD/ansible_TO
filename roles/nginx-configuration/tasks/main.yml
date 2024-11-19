@@ -1,0 +1,48 @@
+- name: Create server.conf for each server
+  template:
+    src: server.conf.j2
+    dest: /etc/nginx/conf.d/{{ item.server_name }}.conf
+  loop:
+    - server_port: 7070
+      server_name: jmart-ansible.kz
+      locations:
+        - path: /main
+          status_code: 200
+          message: Добро пожаловать на JMart!
+        - path: /profile
+          status_code: 201
+          message: Это страница профиля.
+
+    - server_port: 8080
+      server_name: jusan-ansible.kz
+      locations:
+        - path: /
+          status_code: 200
+          message: Добро пожаловать на Jusan Bank!
+        - path: /account
+          status_code: 202
+          message: Здесь ваш банковский счет!
+
+    - server_port: 9090
+      server_name: invest-ansible.kz
+      locations:
+        - path: /home
+          status_code: 200
+          message: Добро пожаловать на Jusan Invest!
+        - path: /user
+          status_code: 203
+          message: Это страница с вашим брокерским счетом.
+  notify: reload-nginx
+
+- name: Configure NGINX load balancer
+  template:
+    src: app.conf.j2
+    dest: /etc/nginx/conf.d/app.conf
+    mode: '0644'
+  vars:
+    server_port: 9999
+    server_name: jusan-apps.kz
+    apps:
+      - local-vps-23:9090
+      - local-vps-24:9090
+  notify: reload-nginx
