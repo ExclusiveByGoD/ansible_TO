@@ -1,4 +1,29 @@
 ---
+- hosts: app
+  become: yes
+  tasks:
+    - name: Download the API binary
+      get_url:
+        url: https://github.com/jusan-singularity/track-devops-systemd-api/releases/download/v0.1/api
+        dest: /tmp/api
+        mode: 0755
+    
+    - name: Copy api.service to systemd directory
+      copy:
+        src: api.service
+        dest: /etc/systemd/system/api.service
+        mode: '0644'
+
+    - name: Reload systemd to register the new service
+      systemd:
+        daemon_reload: yes
+
+    - name: Start and enable the API service
+      systemd:
+        name: api.service
+        state: started
+        enabled: yes
+
 - hosts: lb
   become: yes
   tasks:
@@ -52,6 +77,19 @@
             - path: /user
               status_code: 203
               message: Это страница с вашим брокерским счетом.
+      notify: reload-nginx
+
+    - name: Configure NGINX load balancer
+      template:
+        src: app.conf.j2
+        dest: /etc/nginx/conf.d/app.conf
+        mode: '0644'
+      vars:
+        server_port: 9999
+        server_name: jusan-apps.kz
+        apps:
+          - local-vps-23:9090
+          - local-vps-24:9090
       notify: reload-nginx
 
   handlers:
