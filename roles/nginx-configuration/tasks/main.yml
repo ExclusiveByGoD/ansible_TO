@@ -23,15 +23,22 @@
           status_code: 202
           message: Здесь ваш банковский счет!
 
-    - server_port: 9090
+    - server_port: 8888
       server_name: invest-ansible.kz
       locations:
         - path: /home
           status_code: 200
-          message: Добро пожаловать на Jusan Invest!
+          message: Добро  пожаловать на Jusan Invest!
         - path: /user
           status_code: 203
           message: Это страница с вашим брокерским счетом.
+
+    - server_port: 9090
+      server_name: jusan-secret.kz
+      locations:
+        - path: /secret
+          status_code: 200
+          message: "{{ secret_token }}"
   notify: reload-nginx
 
 - name: Configure NGINX load balancer
